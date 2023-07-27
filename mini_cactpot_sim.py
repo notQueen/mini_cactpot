@@ -1,4 +1,4 @@
-from random import randint
+from random import randrange
 
 class obj_tile():
     def __init__(self, game, number, value):
@@ -7,37 +7,6 @@ class obj_tile():
         self.value = value
         self.hidden = True
         self.text = "?"
-
-
-
-class game_mini_cactpot():
-    def __init__(self):
-        solution = ()
-        que = list(range(1, 10))
-        while len(que) > 0:
-            solution.append(que.pop(randint(len(que))))
-        tiles = [obj_tile(self, num, solution[num]) for num in range(9)]
-
-
-
-
-
-
-
-
-
-
-class grid():
-    def __init__(self, game):
-        """
-            pass parent game
-        """
-        self.game = game
-        self.tiles = ()
-    def add_tile(self, tile):
-        self.tiles.append(tile)
-
-
 
 class game_mini_cactpot():
     SCOREBOARD = {
@@ -67,35 +36,26 @@ class game_mini_cactpot():
         7: (4, 5, 6),
         8: (7, 8, 9)
     }
+
     def __init__(self):
-        self.buttons = {}
-        """
-            this should contain references to 9 buttons with the index as key. exmaple: (5, buttonReference)
-        """
-        self.solution = {}
-        """
-            this should contain a list of all numbers from 1 though 9 (inclusive) in a randomized order to serve as the solution
-        """
-        self.gamestate = 0
-        """
-            0 : initial state. expects tile choice
-            1 : tile choice finished. expects line choice
-            2 : game over. display results
-        """
-        self.attempts = 3
+        solution = []
+        que = list(range(1, 10))
+        while len(que) > 0:
+            solution.append(que.pop(randrange(0, len(que))))
+        self.tiles = [obj_tile(self, num, solution[num]) for num in range(9)]
 
-
-
-
-
-
-
-
-    def get_score_from_line(self, line):
+    def calculate_score(self, line):
+        """give line ref, get score"""
         sum = 0
-        for tile in self.LINES[line]:
-            sum += self.solution[tile]
+        tiles = self.LINES[line]
+        for tile in tiles: sum += self.tiles[tile].value
         return self.SCOREBOARD[sum]
-    
-    def get_tiles_from_line(self, line):
-        return self.LINES[line]
+
+
+
+def main():
+    gaem = game_mini_cactpot()
+    for tile in gaem.tiles: print(tile.value) # simple test
+
+if __name__ == "__main__":
+    main()
