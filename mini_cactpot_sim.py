@@ -1,55 +1,22 @@
 from random import randint
 
-
-
-
-
-
-
-
-
-
-
-
-class tile():
-    def __init__(self, number):
+class obj_tile():
+    def __init__(self, game, number, value):
+        self.game = game
         self.number = number
-        self.position = None
-        self.value = None
+        self.value = value
         self.hidden = True
         self.text = "?"
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class game_mini_cactpot():
+    def __init__(self):
+        solution = ()
+        que = list(range(1, 10))
+        while len(que) > 0:
+            solution.append(que.pop(randint(len(que))))
+        tiles = [obj_tile(self, num, solution[num]) for num in range(9)]
 
 
 
