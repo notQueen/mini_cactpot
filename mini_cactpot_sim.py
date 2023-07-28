@@ -1,6 +1,15 @@
 from random import randrange
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QPushButton
 
+class obj_window(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.setMinimumSize(200, 200)
+        self.setMaximumSize(1000, 1000)
+    def resizeEvent(self, *args, **kwargs):
+        shortest_side = min(self.height(), self.width())
+        self.resize(shortest_side, shortest_side)
+
 class obj_tile():
     def __init__(self, game, number, value):
         self.game = game
@@ -59,7 +68,7 @@ class obj_monitor():
     def __init__(self, game):
         self.game = game
         self.app = QApplication()
-        self.window = QMainWindow()
+        self.window = obj_window()
         self.widget = QWidget()
         self.layout = QGridLayout()
 
@@ -67,22 +76,23 @@ class obj_monitor():
         self.window.setCentralWidget(self.widget)
         self.widget.setLayout(self.layout)
 
-        """
-        self.testbutton = QPushButton()
-        self.testbutton.setText("I'm a test-button!")
+        self.buttons = {tile: QPushButton() for tile in range(len(self.game.tiles))}
+
+        row, col = 0, 0
+
+        for key, button in self.buttons.items():
+            self.layout.addWidget(button, row, col)
+            button.clicked.connect(self.update)
+            if key % 3 == 2: col += 1; row = 0
+            else: row += 1
         
-        self.layout.addWidget(self.testbutton)
-        """
-
-        self.buttons = {i: QPushButton() for i in range(5)}
-        for i, j in self.buttons.items(): self.layout.addWidget(j)
-
+        self.update()
         self.window.show()
         self.app.exec()
 
     def update(self):
         for key, button in self.buttons.items():
-            if self.game.button[key].hidden: button.setText("?")
+            if self.game.tiles[key].hidden: button.setText("?")
             else: button.setText(str(self.game.tiles[key].value))
 
     def reveal_tile(self, tile):
