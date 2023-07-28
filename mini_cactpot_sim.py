@@ -1,14 +1,20 @@
 from random import randrange
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QPushButton
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QPushButton
+
+"""
+from PySide6.QtCore import QEvent, QSize
 
 class obj_window(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.setMinimumSize(200, 200)
-        self.setMaximumSize(1000, 1000)
+        #self.setMinimumSize(300, 300)
+        #self.setMaximumSize(1000, 1000)
+        self.setFixedSize(300, 300)
+
     def resizeEvent(self, *args, **kwargs):
         shortest_side = min(self.height(), self.width())
         self.resize(shortest_side, shortest_side)
+"""
 
 class obj_tile():
     def __init__(self, game, number, value):
@@ -68,24 +74,40 @@ class obj_monitor():
     def __init__(self, game):
         self.game = game
         self.app = QApplication()
-        self.window = obj_window()
+        self.window = QMainWindow()
         self.widget = QWidget()
         self.layout = QGridLayout()
 
         self.window.setWindowTitle("Mini-Cactpot Simulator")
+        self.window.setFixedSize(300, 300)
         self.window.setCentralWidget(self.widget)
         self.widget.setLayout(self.layout)
 
-        self.buttons = {tile: QPushButton() for tile in range(len(self.game.tiles))}
-
         row, col = 0, 0
+
+        self.buttons = {}
+
+        for key, tile in enumerate(self.game.tiles):
+            button = QPushButton()
+
+            button.clicked.connect(self.update)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.layout.addWidget(button, row, col)
+            self.buttons[key] = button
+            if key % 3 == 2: col += 1; row = 0
+            else: row += 1
+
+
+        """
+        self.buttons = {tile: QPushButton() for tile in range(len(self.game.tiles))}
 
         for key, button in self.buttons.items():
             self.layout.addWidget(button, row, col)
             button.clicked.connect(self.update)
             if key % 3 == 2: col += 1; row = 0
             else: row += 1
-        
+        """
+
         self.update()
         self.window.show()
         self.app.exec()
