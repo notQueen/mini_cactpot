@@ -144,17 +144,6 @@ class obj_monitor():
             if key % 3 == 2: col += 1; row = 0
             else: row += 1
 
-
-        """
-        self.buttons = {tile: QPushButton() for tile in range(len(self.game.tiles))}
-
-        for key, button in self.buttons.items():
-            self.layout_inner.addWidget(button, row, col)
-            button.clicked.connect(self.update)
-            if key % 3 == 2: col += 1; row = 0
-            else: row += 1
-        """
-
         self.update()
         self.window.show()
         self.app.exec()
@@ -175,7 +164,6 @@ class obj_monitor():
 def main():
     game = game_mini_cactpot()
     monitor = obj_monitor(game)
-    #for tile in game.tiles: print(tile.value) # simple test
 
 if __name__ == "__main__":
     main()
