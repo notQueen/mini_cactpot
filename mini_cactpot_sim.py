@@ -1,21 +1,7 @@
 from random import randrange
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 from PySide6.QtGui import QFont
-
-"""
-from PySide6.QtCore import QEvent, QSize
-
-class obj_window(QMainWindow):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        #self.setMinimumSize(300, 300)
-        #self.setMaximumSize(1000, 1000)
-        self.setFixedSize(300, 300)
-
-    def resizeEvent(self, *args, **kwargs):
-        shortest_side = min(self.height(), self.width())
-        self.resize(shortest_side, shortest_side)
-"""
 
 class obj_tile():
     def __init__(self, game, number, value):
@@ -108,11 +94,12 @@ class obj_monitor():
         self.layout_side.setContentsMargins(0, 0, 0, 0)
 
         self.widget_side = QWidget()
+        self.widget_side.setContentsMargins(0, 0, 0, 0)
         self.widget_side.setLayout(self.layout_side)
 
         self.layout_outer = QGridLayout()
         self.layout_outer.addWidget(self.widget_inner, 1, 1, 3, 3)
-        self.layout_outer.addWidget(self.widget_side, 1, 4, 3, 1)
+        self.layout_outer.addWidget(self.widget_side, 1, 4, 4, 1)
 
         self.widget_outer = QWidget()
         self.widget_outer.setLayout(self.layout_outer)
@@ -152,7 +139,61 @@ class obj_monitor():
         self.reset_button.clicked.connect(self.reset)
         self.reset_button.setFont(self.font_reset)
         self.reset_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.layout_outer.addWidget(self.reset_button, 4, 4)
+        self.layout_outer.addWidget(self.reset_button, 4, 0)
+        
+        """
+
+        for key, (sum, score) in enumerate(self.game.SCOREBOARD.items()):
+            print(f"Current key: {key % len(self.game.SCOREBOARD) / 2}")
+            label_sum = QLabel()
+            label_sum.setText("test")
+            #label_sum.setFont(score_font)
+            label_score = QLabel()
+            label_score.setText("score")
+            #label_score.setFont(score_font)
+            layout_pair = QGridLayout()
+            layout_pair.addWidget(label_sum, 0, 0)
+            layout_pair.addWidget(label_score, 0, 1)
+            widget_pair = QWidget()
+            widget_pair.setLayout(layout_pair)
+            self.layout_side.addWidget(widget_pair, key % len(self.game.SCOREBOARD) / 2, 0)
+        """
+        
+        score_font = QFont()
+        score_font.setPointSize(7)
+        for key, (sum, score) in enumerate(self.game.SCOREBOARD.items()):
+            label_sum = QLabel()
+            label_sum.setStyleSheet("background-color: yellow;")
+            label_sum.setAlignment(Qt.AlignRight)
+            label_sum.setFont(score_font)
+            label_sum.setText(f"{sum}:")
+            label_score = QLabel()
+            label_score.setStyleSheet("background-color: yellow;")
+            label_score.setAlignment(Qt.AlignLeft)
+            label_score.setFont(score_font)
+            label_score.setText(f"{score}")
+            layout_pair = QGridLayout()
+            layout_pair.setContentsMargins(0, 0, 0, 0)
+            layout_pair.addWidget(label_sum, 0, 0)
+            layout_pair.addWidget(label_score, 0, 1)
+            widget_pair = QWidget()
+            widget_pair.setLayout(layout_pair)
+            self.layout_side.addWidget(widget_pair, key, 0)
+        
+        """
+        self.label_text = ""
+        for sum, score in self.game.SCOREBOARD.items():
+            self.label_text += f"{sum}: {score}\n"
+        temp_font = QFont()
+        temp_font.setPointSize(8)
+        self.label_side = QLabel()
+        self.label_side.setText(self.label_text)
+        self.label_side.setFont(temp_font)
+        self.layout_side.addWidget(self.label_side, 1, 4, 3, 1)
+        """
+        
+        # TRY GRID OF LABELS WITH SCORES
+        # they can light up to indicate scores and stuff it'll be cute trust me
 
         row, col = 0, 0
         self.buttons = {}
