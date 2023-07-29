@@ -91,6 +91,7 @@ class obj_monitor():
         self.widget_inner.setLayout(self.layout_inner)
 
         self.layout_side = QGridLayout()
+        self.layout_side.setSpacing(0)
         self.layout_side.setContentsMargins(0, 0, 0, 0)
 
         self.widget_side = QWidget()
@@ -99,7 +100,7 @@ class obj_monitor():
 
         self.layout_outer = QGridLayout()
         self.layout_outer.addWidget(self.widget_inner, 1, 1, 3, 3)
-        self.layout_outer.addWidget(self.widget_side, 1, 4, 4, 1)
+        self.layout_outer.addWidget(self.widget_side, 1, 4, 3, 1)
 
         self.widget_outer = QWidget()
         self.widget_outer.setLayout(self.layout_outer)
@@ -160,23 +161,32 @@ class obj_monitor():
         """
         
         score_font = QFont()
-        score_font.setPointSize(7)
+        score_font.setPointSize(8)
         for key, (sum, score) in enumerate(self.game.SCOREBOARD.items()):
             label_sum = QLabel()
-            label_sum.setStyleSheet("background-color: yellow;")
+            #label_sum.setStyleSheet("background-color: yellow;")
             label_sum.setAlignment(Qt.AlignRight)
             label_sum.setFont(score_font)
-            label_sum.setText(f"{sum}:")
+            label_sum.setText(f"{sum}")
+            label_divisor = QLabel()
+            #label_divisor.setStyleSheet("background-color: LightBlue;")
+            label_divisor.setFixedWidth(8)
+            label_divisor.setAlignment(Qt.AlignCenter)
+            label_divisor.setFont(score_font)
+            label_divisor.setText(":")
             label_score = QLabel()
-            label_score.setStyleSheet("background-color: yellow;")
+            #label_score.setStyleSheet("background-color: yellow;")
             label_score.setAlignment(Qt.AlignLeft)
             label_score.setFont(score_font)
             label_score.setText(f"{score}")
             layout_pair = QGridLayout()
+            layout_pair.setSpacing(0)
             layout_pair.setContentsMargins(0, 0, 0, 0)
             layout_pair.addWidget(label_sum, 0, 0)
-            layout_pair.addWidget(label_score, 0, 1)
+            layout_pair.addWidget(label_divisor, 0, 1)
+            layout_pair.addWidget(label_score, 0, 2)
             widget_pair = QWidget()
+            #widget_pair.setStyleSheet("background-color: rgb(100, 200, 100);")
             widget_pair.setLayout(layout_pair)
             self.layout_side.addWidget(widget_pair, key, 0)
         
