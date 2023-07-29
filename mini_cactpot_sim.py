@@ -81,55 +81,78 @@ class game_mini_cactpot():
         return self.SCOREBOARD[sum]
 
 class obj_monitor():
-    ARROW_SYMBOLS = ["⇘", "⇓", "⇓", "⇓", "⇙", "⇒", "⇒", "⇒"]
+    ARROW_DOUBLE = ["⇘", "⇓", "⇓", "⇓", "⇙", "⇒", "⇒", "⇒"]
+    ARROW_NORMAL = ["↘", "↓", "↓", "↓", "↙", "→", "→", "→"]
+
+    ARROW_SYMBOLS = ARROW_NORMAL
 
     def __init__(self, game):
+        WINDOW_TITLE: str = "Mini-Cactpot Simulator"
+        FONT_SIZE_NUMBERS: int = 30
+        FONT_SIZE_ARROWS: int = 30
+        FONT_BOLD_ARROWS: bool = True
+        FONT_SIZE_RESET: int = 20
+        WINDOW_WIDTH, WINDOW_HEIGHT = 500, 500 # type: [int, int]
+        OUTER_WIDTH, OUTER_HEIGHT = WINDOW_WIDTH, WINDOW_HEIGHT
+
         self.game = game
         self.app = QApplication()
-        self.window = QMainWindow()
-        self.widget_outer = QWidget()
-        self.widget_inner = QWidget()
-        self.layout_outer = QGridLayout()
+
         self.layout_inner = QGridLayout()
-        self.font_numbers = QFont()
-        self.font_arrows = QFont()
-        self.font_reset = QFont()
-
-        self.window.setWindowTitle("Mini-Cactpot Simulator")
-        self.window.setFixedSize(500, 500)
-        self.window.setCentralWidget(self.widget_outer)
-
-        self.widget_outer.setFixedSize(500, 500)
-        self.widget_outer.setLayout(self.layout_outer)
-        self.layout_outer.addWidget(self.widget_inner, 1, 1, 3, 3)
         self.layout_inner.setContentsMargins(0, 0, 0, 0)
+
+        self.widget_inner = QWidget()
         self.widget_inner.setLayout(self.layout_inner)
 
-        self.font_numbers.setPointSize(30)
-        self.font_arrows.setPointSize(20)
-        self.font_arrows.setBold(True)
-        self.font_reset.setPointSize(20)
+        self.layout_side = QGridLayout()
+        self.layout_side.setContentsMargins(0, 0, 0, 0)
 
+        self.widget_side = QWidget()
+        self.widget_side.setLayout(self.layout_side)
+
+        self.layout_outer = QGridLayout()
+        self.layout_outer.addWidget(self.widget_inner, 1, 1, 3, 3)
+        self.layout_outer.addWidget(self.widget_side, 1, 4, 3, 1)
+
+        self.widget_outer = QWidget()
+        self.widget_outer.setLayout(self.layout_outer)
+        self.widget_outer.setFixedSize(OUTER_WIDTH, OUTER_HEIGHT)
+
+        self.window = QMainWindow()
+        self.window.setWindowTitle(WINDOW_TITLE)
+        self.window.setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.window.setCentralWidget(self.widget_outer)
+
+        self.font_numbers = QFont()
+        self.font_numbers.setPointSize(FONT_SIZE_NUMBERS)
+
+        self.font_arrows = QFont()
+        self.font_arrows.setPointSize(FONT_SIZE_ARROWS)
+        self.font_arrows.setBold(FONT_BOLD_ARROWS)
+
+        self.font_reset = QFont()
+        self.font_reset.setPointSize(FONT_SIZE_RESET)
+        
         self.arrow_buttons = {}
+        self.number_buttons = {}
+
         row, col = 0, 0
-        for arrow in range(len(self.ARROW_SYMBOLS)):
+        for i, symbol in enumerate(self.ARROW_SYMBOLS):
             button = QPushButton()
-            button.setText(self.ARROW_SYMBOLS[arrow])
+            button.clicked.connect(lambda _=None, button=button: self.click_arrow(button))
             button.setFont(self.font_arrows)
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            button.setText(symbol)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding,)
             self.layout_outer.addWidget(button, row, col)
-            if arrow <= 3:
-                row = 0
-                col += 1
-            else:
-                row += 1
-                col = 0
+            if i < 4: col += 1
+            else: col = 0; row += 1
 
         self.reset_button = QPushButton()
         self.reset_button.setText("RESET")
+        self.reset_button.clicked.connect(self.reset)
         self.reset_button.setFont(self.font_reset)
         self.reset_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.layout_outer.addWidget(self.reset_button, 4, 1, 1, 3)
+        self.layout_outer.addWidget(self.reset_button, 4, 4)
 
         row, col = 0, 0
         self.buttons = {}
@@ -148,9 +171,15 @@ class obj_monitor():
         self.window.show()
         self.app.exec()
 
-    def click(self, button):
-        self.reveal_tile(button.tile)
+    def click(self, caller):
+        self.reveal_tile(caller.tile)
         self.update()
+    
+    def click_arrow(self, caller):
+        pass
+
+    def reset():
+        pass
 
     def update(self):
         for key, button in self.buttons.items():
