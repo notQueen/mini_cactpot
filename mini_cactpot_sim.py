@@ -4,41 +4,51 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 
 class my_game():
+    
+    LINES = [(1, 5, 9), (1, 4, 7), (2, 5, 8), (3, 6, 9),
+             (3, 5, 7), (1, 2, 3), (4, 5, 6), (7, 8, 9)]
+    
+    SCOREBOARD = {6: 10000, 7: 36, 8: 720, 9: 360, 10: 80, 11: 252, 12: 108, 13: 72, 14: 54, 15: 180,
+                  16: 72, 17: 180, 18: 119, 19: 36, 20: 306, 21: 1080, 22: 144, 23: 1800, 24: 3600}
+
     def __init__(self) -> None:
-        # what methods does game need?
-            # construct components
-                # tiles -> list
-                # lines -> list
-                # scores -> dict
-                # state -> int
-            # activate tile -> index => 0 or 1-9
-            # activate arrow -> index => 0 or score as int
-            # calculate score -> (value, value, value) => score 
+        self.tiles = [my_tile() for _ in range(9)]
+        self.lines = self.LINES
         self.reset()
     
     def reset(self):
-        for tile in self.tiles():
-            tile.reset()
-        self.generate_solution()
-    
-    def generate_solution(self):
+        self.attempts = 3
         que = list(range(1, 10))
         for tile in self.tiles:
-            tile.value = que.pop(randrange(len(que)))
-    
-    def activate(self, tile_index):
+            tile.set(que.pop(randrange(len(que))))
+        
+    def check_tile(self, tile_index):
         tile = self.tiles[tile_index]
-        if tile.open is True: return 0
-        tile.open = True
-        return tile.value
+        if tile.is_open() or self.attempts > 1: return 0
+        self.attempts -= 1
+        return tile.check()
+    
+    def check_line(self, line_index):
+        line = self.lines[line_index]; sum = 0
+        for tile in line:
+            sum += self.tiles[tile].fetch()
+        self.reset(); return sum
+
 
 class my_tile():
     def __init__(self):
-        self.reset()
+        self.set()
     
-    def reset(self):
+    def fetch(self) -> int:
+        self.open = True
+        return self.value
+    
+    def set(self, value=None) -> None:
         self.open = False
-        self.value = None
+        self.value = value
+        
+    def is_open(self) -> bool:
+        return self.open
 
 
 
@@ -265,76 +275,6 @@ class obj_monitor():
     def reveal_tile(self, tile):
         self.game.reveal_tile(tile)
         self.update()
-
-class ABSTRACT_child():
-    def __init__(self, parent):
-        parent.register_child(self)
-        self.parent = parent
-        self.main()
-
-class GUI_manager():
-    def __init__(self):
-        self.listeners = []
-        self.tiles = GUI_tiles()
-        self.arrows = GUI_arrows()
-        self.scoreboard = GUI_scoreboard()
-        self.restart = GUI_restart()
-        
-        self.update()
-    
-    def update(self):
-        for child in self.listeners:
-            child.update()
-    
-    def register_child(self, caller):
-        self.listeners.append(caller)
-
-class GUI_tiles(ABSTRACT_child):
-    def main(self):
-        self.buttons = {}
-        for i in range(9):
-            new = QPushButton()
-            new
-            new
-            new
-            new
-            new
-            self.buttons[i] = new
-    
-    def update(self):
-        for key, button in self.buttons.items():
-            button.setStyleSheet("background-color: rgb(100, 200, 100);")
-            pass
-
-class GUI_arrows(ABSTRACT_child):
-    def update():
-        pass
-
-class GUI_scoreboard(ABSTRACT_child):
-    def update():
-        pass
-
-class GUI_restart(ABSTRACT_child):
-    def update():
-        pass
-    
-    def on_click():
-        # reset everything
-        # update
-        pass
-
-# what methods does the game need?
-    # create tiles
-    # count/restrict attempts -> verify actions
-    # get tiles in line
-    # calculate score
-    # randomize solution
-    
-# what does the state need to contain?
-    # current mode -> select tiles, select arrows, display score
-    # remaining attempts
-
-
 
 class display_button():
     def __init__(self, index, *args, **kwargs):
