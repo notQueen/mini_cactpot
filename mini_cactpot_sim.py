@@ -1,7 +1,7 @@
 from random import randrange
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 
 class obj_tile():
     def __init__(self, game, number, value):
@@ -190,21 +190,6 @@ class obj_monitor():
             widget_pair.setLayout(layout_pair)
             self.layout_side.addWidget(widget_pair, key, 0)
         
-        """
-        self.label_text = ""
-        for sum, score in self.game.SCOREBOARD.items():
-            self.label_text += f"{sum}: {score}\n"
-        temp_font = QFont()
-        temp_font.setPointSize(8)
-        self.label_side = QLabel()
-        self.label_side.setText(self.label_text)
-        self.label_side.setFont(temp_font)
-        self.layout_side.addWidget(self.label_side, 1, 4, 3, 1)
-        """
-        
-        # TRY GRID OF LABELS WITH SCORES
-        # they can light up to indicate scores and stuff it'll be cute trust me
-
         row, col = 0, 0
         self.buttons = {}
         for key, tile in self.game.tiles.items():
@@ -240,6 +225,175 @@ class obj_monitor():
     def reveal_tile(self, tile):
         self.game.reveal_tile(tile)
         self.update()
+
+class ABSTRACT_child():
+    def __init__(self, parent):
+        parent.register_child(self)
+        self.parent = parent
+        self.main()
+
+class GUI_manager():
+    def __init__(self):
+        self.listeners = []
+        self.tiles = GUI_tiles()
+        self.arrows = GUI_arrows()
+        self.scoreboard = GUI_scoreboard()
+        self.restart = GUI_restart()
+        
+        self.update()
+    
+    def update(self):
+        for child in self.listeners:
+            child.update()
+    
+    def register_child(self, caller):
+        self.listeners.append(caller)
+
+class GUI_tiles(ABSTRACT_child):
+    def main(self):
+        self.buttons = {}
+        for i in range(9):
+            new = QPushButton()
+            new
+            new
+            new
+            new
+            new
+            self.buttons[i] = new
+    
+    def update(self):
+        for key, button in self.buttons.items():
+            button.setStyleSheet("background-color: rgb(100, 200, 100);")
+            pass
+
+class GUI_arrows(ABSTRACT_child):
+    def update():
+        pass
+
+class GUI_scoreboard(ABSTRACT_child):
+    def update():
+        pass
+
+class GUI_restart(ABSTRACT_child):
+    def update():
+        pass
+    
+    def on_click():
+        # reset everything
+        # update
+        pass
+
+# what methods does the game need?
+    # create tiles
+    # count/restrict attempts -> verify actions
+    # get tiles in line
+    # calculate score
+    # randomize solution
+    
+# what does the state need to contain?
+    # current mode -> select tiles, select arrows, display score
+    # remaining attempts
+
+
+
+class my_button():
+    def __init__(self, *args, **kwargs):
+        self.main(*args, **kwargs)
+        
+    def enable(self):
+        self.Q.setEnabled()
+    
+    def disable(self):
+        self.Q.setDisabled()
+    
+    def highlight(self, heat: int):
+        if heat == 0:
+            pass
+        if heat == 1:
+            pass
+        if heat == 2:
+            pass
+
+class my_numtile(my_button):
+    def main():
+        new = QPushButton()
+    
+    def reveal(self, value: int):
+        self.Q.setText(f"{value}")
+        
+    def hide(self):
+        self.Q.setText("?")
+
+class my_arrow(my_button):
+    def main():
+        pass
+    
+class my_scoreboard():
+    pass
+
+class my_manager():
+    def __init__(self, game):
+        self.game = game
+        self.grid = {}
+        self.arrows = {}
+        
+        for tile in game.tiles: # if this isn't 9 then something is very wrong
+            new = my_numtile()
+            self.grid.append(new)
+        
+        for arrow in game.arrows: # if this isn't 9 then something is very wrong
+            new = my_arrow()
+            self.arrows.append(new)
+            
+        self.scoreboard = my_scoreboard()
+
+        new = QPushButton
+        new.setText("Reset")
+        new.clicked.connect(self.reset)
+        self.reset = new
+    
+    def get_state():
+        pass
+    
+    def grid_enabled(self, switch: bool):
+        for tile in self.grid:
+            if switch:
+                tile.enable()
+            else:
+                tile.disable()
+    
+    def arrows_enabled(self, switch: bool):
+        for arrow in self.arrows:
+            if switch:
+                arrow.enable()
+            else:
+                arrow.disable()
+                
+    def reset(self):
+        self.game.reset()
+        for tile in self.grid:
+            tile.enable()
+            tile.hide()
+            tile.highlight(0)
+        for arrow in self.arrows:
+            arrow.disable()
+            arrow.highlight(0)
+
+                
+    
+# what methods does a manager need?
+    # get state
+    # hide / reveal values
+    # highlight / unhighlight buttons
+    # disable / enable keypad
+    # disable / enable arrows
+    # reset everything
+    # check a given line
+    # communicate score
+
+
+
+
 
 def main():
     game = game_mini_cactpot()
