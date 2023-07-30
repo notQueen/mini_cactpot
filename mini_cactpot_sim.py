@@ -3,6 +3,46 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 
+class my_game():
+    def __init__(self) -> None:
+        # what methods does game need?
+            # construct components
+                # tiles -> list
+                # lines -> list
+                # scores -> dict
+                # state -> int
+            # activate tile -> index => 0 or 1-9
+            # activate arrow -> index => 0 or score as int
+            # calculate score -> (value, value, value) => score 
+        self.reset()
+    
+    def reset(self):
+        for tile in self.tiles():
+            tile.reset()
+        self.generate_solution()
+    
+    def generate_solution(self):
+        que = list(range(1, 10))
+        for tile in self.tiles:
+            tile.value = que.pop(randrange(len(que)))
+    
+    def activate(self, tile_index):
+        tile = self.tiles[tile_index]
+        if tile.open is True: return 0
+        tile.open = True
+        return tile.value
+
+class my_tile():
+    def __init__(self):
+        self.reset()
+    
+    def reset(self):
+        self.open = False
+        self.value = None
+
+
+
+
 class obj_tile():
     def __init__(self, game, number, value):
         self.game = game
@@ -296,10 +336,15 @@ class GUI_restart(ABSTRACT_child):
 
 
 
-class my_button():
-    def __init__(self, *args, **kwargs):
+class display_button():
+    def __init__(self, index, *args, **kwargs):
+        self.index = index
+        self.reset()
         self.main(*args, **kwargs)
         
+    def reset(self):
+        self.highlight(0)
+    
     def enable(self):
         self.Q.setEnabled()
     
@@ -314,38 +359,48 @@ class my_button():
         if heat == 2:
             pass
 
-class my_numtile(my_button):
+class display_tile(display_button):
     def main():
         new = QPushButton()
+        
+    def reset(self):
+        self.hide()
+        self.enable()
+        super().reset()
     
     def reveal(self, value: int):
         self.Q.setText(f"{value}")
-        
+    
     def hide(self):
         self.Q.setText("?")
 
-class my_arrow(my_button):
+class display_arrow(display_button):
     def main():
-        pass
+        new = QPushButton()
     
-class my_scoreboard():
-    pass
+    def reset(self):
+        self.disable()
+        super().reset()
+    
+class display_scoreboard():
+    def __init__(self) -> None:
+        new = QWidget
 
-class my_manager():
+class display_manager():
     def __init__(self, game):
         self.game = game
         self.grid = {}
         self.arrows = {}
         
         for tile in game.tiles: # if this isn't 9 then something is very wrong
-            new = my_numtile()
+            new = display_tile()
             self.grid.append(new)
         
         for arrow in game.arrows: # if this isn't 9 then something is very wrong
-            new = my_arrow()
+            new = display_arrow()
             self.arrows.append(new)
-            
-        self.scoreboard = my_scoreboard()
+        
+        self.scoreboard = display_scoreboard()
 
         new = QPushButton
         new.setText("Reset")
@@ -369,7 +424,7 @@ class my_manager():
             else:
                 arrow.disable()
                 
-    def reset(self):
+    def reset(self): # each tile should have their own reset.
         self.game.reset()
         for tile in self.grid:
             tile.enable()
@@ -378,8 +433,17 @@ class my_manager():
         for arrow in self.arrows:
             arrow.disable()
             arrow.highlight(0)
+            
+    def on_grid_click(self, tile):
+        if reply := self.game.activate(tile.index) == 0: return
+        tile.reveal(reply)
+    
+    def on_arrow_click(self, arrow):
+        if reply := self.game.arrow(arrow.index) == 0: return
+        self.present_score(reply)
+    
 
-                
+
     
 # what methods does a manager need?
     # get state
