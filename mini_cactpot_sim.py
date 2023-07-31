@@ -16,19 +16,29 @@ class core_game():
         self.lines = self.LINES
         self.reset()
     
+    def play(self, ref: int) -> int:
+        # GAME LOGIC GOES HERE ?
+        pass
+    
     def reset(self) -> None:
+        self.state = 1
         self.attempts = 3
+        self.make()
+        
+    def make(self):
         que = list(range(1, 10))
         for tile in self.tiles:
             tile.set(que.pop(randrange(len(que))))
     
-    def get_state(self) -> list:
-        return [tile.look() for tile in self.tiles]
+    def get_state(self):
+        return self.state
+    
+    def look(self, ref):
+        return self.tiles[ref].look()
     
     def check_tile(self, tile_index):
         tile = self.tiles[tile_index]
-        if tile.is_open() or self.attempts > 1: return 0
-        self.attempts -= 1
+        # rewrite me
         return tile.check()
     
     def check_line(self, line_index):
@@ -36,25 +46,26 @@ class core_game():
         for tile in line:
             sum += self.tiles[tile].fetch()
         self.reset(); return sum
+    
+    def open(self, ref):
+        self.tiles[ref].open = True
+    
+    def close(self, ref):
+        self.tiles[ref].open = False
 
 class core_tile():
     def __init__(self):
+        # self.open: bool
+        # self.value: int
         self.set()
     
     def look(self) -> int:
         if self.open: return self.value
         return 0
     
-    def fetch(self) -> int:
-        self.open = True
-        return self.value
-    
     def set(self, value=None) -> None:
         self.open = False
         self.value = value
-        
-    def is_open(self) -> bool:
-        return self.open
 
 class custom_QPushButton(QPushButton):
     def resizeEvent(self, event):
@@ -139,7 +150,6 @@ class core_monitor():
         
     def on_click(self, button_ref):
         self.tiles[button_ref].display(self.game.tiles[button_ref].fetch())
-            
 
     # what does a monitor need?
         # arrow symbols
