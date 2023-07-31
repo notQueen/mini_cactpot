@@ -77,6 +77,12 @@ class monitor_button():
 class monitor_tile(monitor_button):
     def __init__(self):
         super().__init__()
+        
+    def display(self, payload):
+        if payload == 0:
+            self.button.setText("?")
+        else:
+            self.button.setText(str(payload))
 
 class monitor_arrow(monitor_button):
     def __init__(self, symbol):
@@ -90,11 +96,18 @@ class core_monitor():
     
     def __init__(self, game):
         self.game = game
+        self.tiles = []
         app = QApplication()
         window = QMainWindow()
+        window.setWindowTitle("Mini-Cactpot Sim")
         
         main_wrapper = monitor_frame()
         window.setCentralWidget(main_wrapper.widget)
+        
+        reset_button = self.reset_button = monitor_button()
+        reset_button.button.setText("Reset")
+        reset_button.button.clicked.connect(self.reset)
+        main_wrapper.layout.addWidget(reset_button.button, 3, 4)
         
         for key, arrow_symbol in enumerate(self.ARROWS):
             new_arrow = monitor_arrow(arrow_symbol)
@@ -102,7 +115,9 @@ class core_monitor():
         
         for key, _ in enumerate(game.tiles):
             new_tile = monitor_tile()
-            main_wrapper.layout.addWidget(new_tile.button, 1 + (key % 3), 1 + (int(key / 3)))
+            main_wrapper.layout.addWidget(new_tile.button, 1 + (int(key / 3)), 1 + (key % 3))
+            new_tile.button.clicked.connect(lambda _ = None, payload = key: self.on_click(payload))
+            self.tiles.append(new_tile)
         
         # window
             # widget -> main wrapper
@@ -111,9 +126,20 @@ class core_monitor():
                     # 9 tile butoons
                     # reset button
                     # widget -> scoreboard
-
+        
+        self.get_state()
         window.show()
         app.exec()
+    
+    def reset(self):
+        pass
+    
+    def get_state(self):
+        [tile.display(state) for tile, state in zip(self.tiles, self.game.get_state())]
+        
+    def on_click(self, button_ref):
+        self.tiles[button_ref].display(self.game.tiles[button_ref].fetch())
+            
 
     # what does a monitor need?
         # arrow symbols
