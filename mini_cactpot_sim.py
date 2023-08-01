@@ -23,7 +23,6 @@ class core_game():
     
     def play(self, move = -1, reset = False):
         if reset:
-            print("Resetting game...")
             self.reset()
         if self.state == 1 and move in range(len(self.tiles)):
             tile = self.tiles[move]
@@ -135,6 +134,7 @@ class core_monitor():
     def __init__(self, game):
         self.game = game
         self.tiles = []
+        self.arrows= []
         app = QApplication()
         window = QMainWindow()
         window.setWindowTitle("Mini-Cactpot Sim")
@@ -151,6 +151,7 @@ class core_monitor():
             new_arrow = monitor_arrow(arrow_symbol)
             main_wrapper.layout.addWidget(new_arrow.button, (key - 4) * (key > 4), key * (key <= 4))
             new_arrow.button.clicked.connect(lambda _ = None, payload = key: self.on_arrow_click(payload))
+            self.arrows.append(new_arrow)
         
         for key, _ in enumerate(game.tiles):
             new_tile = monitor_tile()
@@ -158,13 +159,10 @@ class core_monitor():
             new_tile.button.clicked.connect(lambda _ = None, payload = key: self.on_tile_click(payload))
             self.tiles.append(new_tile)
         
-        # window
-            # widget -> main wrapper
-                # layout < ^ monitor_frame
-                    # 8 arrow buttons
-                    # 9 tile butoons
-                    # reset button
-                    # widget -> scoreboard
+        scoreboard = self.scoreboard = monitor_frame()
+        scoreboard.label = QLabel()
+        scoreboard.layout.addWidget(scoreboard.label)
+        main_wrapper.layout.addWidget(scoreboard.widget, 1, 4, 2, 1)
         
         game.register_listener(self)
         window.show()
@@ -172,20 +170,39 @@ class core_monitor():
         return
     
     def listen(self, game_state, board_state, score):
-        if score: print(f"Score: {score}")
+        if not score: score = "?"
+        self.scoreboard.label.setText(f"Score:\n{score}")
         [tile.display(message) for tile, message in zip(self.tiles, board_state)]
+        if game_state == 1:
+            self.disable_tiles(False)
+            self.disable_arrows(True)
+        if game_state == 2:
+            self.disable_tiles(True)
+            self.disable_arrows(False)
+        if game_state == 3:
+            self.disable_tiles(True)
+            self.disable_arrows(True)
         return
+    
+    def disable_tiles(self, state):
+        for tile in self.tiles:
+            tile.button.setDisabled(state)
+    
+    def disable_arrows(self, state):
+        for arrow in self.arrows:
+            arrow.button.setDisabled(state)
     
     def on_tile_click(self, button_ref):
         self.game.play(button_ref)
         return
     
     def on_arrow_click(self, arrow_ref):
-        # do something
+        self.game.play(arrow_ref)
         return
     
     def on_reset_click(self):
         self.game.play(reset = True)
+        return
     
 ####################################################################################################
 # MAIN
