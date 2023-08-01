@@ -3,6 +3,9 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QSizePolicy, QLabel, QPushButton
 
+####################################################################################################
+# GAME
+
 class core_game():
     
     LINES = [(0, 4, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8),
@@ -12,60 +15,83 @@ class core_game():
                   16: 72, 17: 180, 18: 119, 19: 36, 20: 306, 21: 1080, 22: 144, 23: 1800, 24: 3600}
 
     def __init__(self) -> None:
-        self.tiles = [core_tile() for _ in range(9)]
+        self.tiles = [core_tile(n) for n in range(9)]
         self.lines = self.LINES
+        self.listeners = []
         self.reset()
+        return
     
-    def play(self, ref: int) -> int:
-        # GAME LOGIC GOES HERE ?
-        pass
+    def play(self, move = -1, reset = False):
+        if reset:
+            print("Resetting game...")
+            self.reset()
+        if self.state == 1 and move in range(len(self.tiles)):
+            tile = self.tiles[move]
+            if not tile.open and self.attempts > 0:
+                self.attempts -= 1
+                if not self.attempts:
+                    self.state = 2
+                tile.open = True
+                self.preach()
+                return
+        elif self.state == 2 and move in range(len(self.lines)):
+            self.state = 3
+            for tile in self.tiles:
+                tile.open = True
+            line = self.lines[move]
+            total = sum([self.tiles[ref].value for ref in line])
+            self.score = self.SCOREBOARD[total]
+            self.preach()
+            return
+        return
     
     def reset(self) -> None:
+        # reset state
         self.state = 1
         self.attempts = 3
-        self.make()
-        
-    def make(self):
+        self.score = 0
+        # make new solution
         que = list(range(1, 10))
         for tile in self.tiles:
-            tile.set(que.pop(randrange(len(que))))
+            tile.value = que.pop(randrange(len(que)))
+            tile.open = False
+        self.tiles[randrange(len(self.tiles))].open = True
+        self.preach()
+        return None
     
-    def get_state(self):
-        return self.state
+    def register_listener(self, listener):
+        self.listeners.append(listener)
+        self.preach()
+        return
     
-    def look(self, ref):
-        return self.tiles[ref].look()
+    def preach(self): # brute force preach everything initially. implement selective preach at a later time maybe.
+        audience = self.listeners
+        state_of_the_board = [tile.get_value() for tile in self.tiles]
+        for dude in audience:
+            dude.listen(self.state, state_of_the_board, self.score)
+        return
     
-    def check_tile(self, tile_index):
-        tile = self.tiles[tile_index]
-        # rewrite me
-        return tile.check()
-    
-    def check_line(self, line_index):
-        line = self.lines[line_index]; sum = 0
-        for tile in line:
-            sum += self.tiles[tile].fetch()
-        self.reset(); return sum
-    
-    def open(self, ref):
-        self.tiles[ref].open = True
-    
-    def close(self, ref):
-        self.tiles[ref].open = False
+####################################################################################################
+# GAME COMPONENTS
 
 class core_tile():
-    def __init__(self):
-        # self.open: bool
-        # self.value: int
-        self.set()
+    def __init__(self, value) -> None:
+        self.open: bool
+        self.value: int
+        self.set(value)
+        return
     
-    def look(self) -> int:
+    def get_value(self) -> int:
         if self.open: return self.value
         return 0
     
-    def set(self, value=None) -> None:
+    def set(self, value) -> None:
         self.open = False
         self.value = value
+        return
+    
+####################################################################################################
+# DISPLAY
 
 class custom_QPushButton(QPushButton):
     def resizeEvent(self, event):
@@ -88,7 +114,8 @@ class monitor_button():
 class monitor_tile(monitor_button):
     def __init__(self):
         super().__init__()
-        
+        return
+    
     def display(self, payload):
         if payload == 0:
             self.button.setText("?")
@@ -117,17 +144,18 @@ class core_monitor():
         
         reset_button = self.reset_button = monitor_button()
         reset_button.button.setText("Reset")
-        reset_button.button.clicked.connect(self.reset)
+        reset_button.button.clicked.connect(self.on_reset_click)
         main_wrapper.layout.addWidget(reset_button.button, 3, 4)
         
         for key, arrow_symbol in enumerate(self.ARROWS):
             new_arrow = monitor_arrow(arrow_symbol)
             main_wrapper.layout.addWidget(new_arrow.button, (key - 4) * (key > 4), key * (key <= 4))
+            new_arrow.button.clicked.connect(lambda _ = None, payload = key: self.on_arrow_click(payload))
         
         for key, _ in enumerate(game.tiles):
             new_tile = monitor_tile()
             main_wrapper.layout.addWidget(new_tile.button, 1 + (int(key / 3)), 1 + (key % 3))
-            new_tile.button.clicked.connect(lambda _ = None, payload = key: self.on_click(payload))
+            new_tile.button.clicked.connect(lambda _ = None, payload = key: self.on_tile_click(payload))
             self.tiles.append(new_tile)
         
         # window
@@ -138,27 +166,29 @@ class core_monitor():
                     # reset button
                     # widget -> scoreboard
         
-        self.get_state()
+        game.register_listener(self)
         window.show()
         app.exec()
+        return
     
-    def reset(self):
-        pass
+    def listen(self, game_state, board_state, score):
+        if score: print(f"Score: {score}")
+        [tile.display(message) for tile, message in zip(self.tiles, board_state)]
+        return
     
-    def get_state(self):
-        [tile.display(state) for tile, state in zip(self.tiles, self.game.get_state())]
-        
-    def on_click(self, button_ref):
-        self.tiles[button_ref].display(self.game.tiles[button_ref].fetch())
-
-    # what does a monitor need?
-        # arrow symbols
-        # a window
-        # a grid of tiles
-        # arrow buttons
-        # a reset button
-        # a scoreboard
-        # wrappers
+    def on_tile_click(self, button_ref):
+        self.game.play(button_ref)
+        return
+    
+    def on_arrow_click(self, arrow_ref):
+        # do something
+        return
+    
+    def on_reset_click(self):
+        self.game.play(reset = True)
+    
+####################################################################################################
+# MAIN
 
 def main():
     game = core_game()
