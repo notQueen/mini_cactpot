@@ -30,13 +30,13 @@ class core_game():
                 self.attempts -= 1
                 if not self.attempts:
                     self.state = 2
-                    print("GAME: State set to 2")
+                    # print("GAME: State set to 2")
                 tile.open = True
                 self.preach()
                 return
         elif self.state == 2 and move in range(len(self.lines)):
             self.state = 3
-            print("GAME: State set to 3")
+            # print("GAME: State set to 3")
             for tile in self.tiles:
                 tile.open = True
             line = self.lines[move]
@@ -47,10 +47,10 @@ class core_game():
         return
     
     def reset(self) -> None:
-        print("GAME: Resetting...")
+        # print("GAME: Resetting...")
         # reset state
         self.state = 1
-        print("GAME: State set to 1")
+        # print("GAME: State set to 1")
         self.attempts = 3
         self.score = 0
         # make new solution
@@ -64,13 +64,28 @@ class core_game():
     
     def register_listener(self, listener):
         self.listeners.append(listener)
-        self.preach()
+        # self.preach()
         return
     
     def preach(self): # brute force preach everything initially. implement selective preach at a later time maybe.
-        print("GAME: Preaching...")
+        # print("GAME: Preaching...")
         audience = self.listeners
         state_of_the_board = [tile.get_value() for tile in self.tiles]
+        
+        # print game board
+        """
+        print("\nGAME: Current board:")
+        printout = ""
+        
+        for key, tile in enumerate(state_of_the_board):
+            printout += f"{tile}"
+            if ((key +1 ) % 3) == 0:
+                printout += "\n"
+            else:
+                printout += " "
+        print(printout, flush=True)
+        """
+        
         for dude in audience:
             dude.listen(self.state, state_of_the_board, self.score)
         return
@@ -215,79 +230,102 @@ class core_monitor():
 ####################################################################################################
 # AI
 
-# what will the AI need?
-
-    # logic
-    # statial awareness
-    # eyes
-        # list of seen values
-    
-    # which tiles to reveal?
-        # 1 weigh every tile based on how many lines it participates in
-        # 2 cycle through lines, find all without any revealed tiles
-        # 3 cross reference, find tiles in multiple lists
-        # 4 randomly select tile among higest value in list
-        
-    # a means of evaluating the likely score of a line
-        # cycle through every line
-        # list all posibilities
-        # uh... average the scores? think more about this.
-        # list each score with it's likelyhood
-        # pick the line with the best score to odds ratio
-        
-    # PLAN:
-        # 1 MAKE RANDOM AI TO BUILD FRAMEWORK
-        # 2 MAKE AI WITH THIS LOGIC:
-            # 1: reveal tiles with simple method (Y shape ish)
-            # 2: evaluate lines and pick best guess
-
 class AI():
     def __init__(self, game) -> None:
         self.game = game
         self.lines = game.lines
         self.scoreboard = game.SCOREBOARD
-        print("AI: Connecting to game...")
+        # print("AI: Connecting to game...")
         game.register_listener(self)
+        self.score = 0
+        scores = []
+        
+        #while not self.score == 10000:
+        games_to_play = 10000000
+        
+        for _ in range(games_to_play):
+            game.play(reset = True)
+            scores.append(self.score)
+        
+        average = sum(scores) / len(scores)
+        
+        print(f"Average score in {games_to_play}: {average}")
     
     def listen(self, gamestate, boardstate, score):
+        self.score = score
         self.board = boardstate
-        self.seen = [value for value in boardstate if value]
+        # seen_tiles = [value for value in boardstate if value] # i think this can be deleted
+        open_tiles = [key for key, value in enumerate(self.board) if value]
         
         if gamestate == 1:
-            print("AI: Received state 1.")
-            open_tiles = [key for key, value in enumerate(self.board) if value]
-            print(f"AI: {len(open_tiles)} tiles are open.")
-            candidates = [line for line in self.lines if not any(tile in open_tiles for tile in line)]
-            print(f"AI: identified {len(candidates)} candidates.")
+            # print("AI: Received state 1 (TILES)")
+            # print(f"AI: Identified {len(open_tiles)} open tiles")
+            candidate_lines = [line for line in self.lines if not any(tile in open_tiles for tile in line)]
+            # print(f"AI: Qualified {len(candidate_lines)} candidates")
             
-            if not len(candidates):
-                best_guesses = [key for key, value in enumerate(self.board) if not value]
+            if not len(candidate_lines):
+                # print("AI: No outstanding guesses. Choosing randomly ...")
+                best_tile_guesses = [key for key, value in enumerate(self.board) if not value]
             else:
                 rankings = {}
-                for candidate in candidates:
+                for candidate in candidate_lines:
                     for tile in candidate:
                         if not tile in rankings:
                             rankings[tile] = 1
                         else:
                             rankings[tile] += 1
                 
-                highest_rank = max(rankings.values())
-                best_guesses = [tile for tile, count in rankings.items() if count == highest_rank]
-                print(f"AI: Identified {best_guesses} as guesses out of {rankings}")
-                
-            guess = best_guesses[randrange(len(best_guesses))]
+                highest_tile_rank = max(rankings.values())
+                best_tile_guesses = [tile for tile, count in rankings.items() if count == highest_tile_rank]
+                # print(f"AI: Identified {best_tile_guesses} as best with a score of {highest_tile_rank}")
+                # this selection process will sometimes reveal all tiles in a line.
             
-            print(f"AI: Playing {guess}")
+            guess = best_tile_guesses[randrange(len(best_tile_guesses))]
+        
+        elif gamestate == 2:
+            # print("Received state 2 (LINES)", flush=True)
+            desired_values = [1, 2, 3]
+            good_tiles = []
+            guess = -1
+            
+            for key, tile in enumerate(boardstate):
+                if tile in desired_values:
+                    good_tiles.append(key)
+                    
+            for key, line in enumerate(self.lines):
+                if all(tile in line for tile in good_tiles):
+                    guess = key
+            
+            if guess == -1:
+                guess = randrange(len(self.lines))
+            # else:
+                # print("Potential Jackpot identified")
+        
+        elif gamestate == 3:
+            # print("AI: Received state 3. (SCORE)")
+            guess = -1
+            # print("AI: Game finished.")
+            # print(f"AI: Score: {score}")
+        else:
+            guess = -1 # this shouldn't happen
+        
+        if not guess == -1:
+            # print(f"AI: Playing {guess}")
             self.game.play(guess)
-
 
 ####################################################################################################
 # MAIN
 
 def main():
+    
+    I_WANT_TO_PLAY = False
+    
     game = core_game()
-    controller = AI(game)
-    # monitor = core_monitor(game)
+    if I_WANT_TO_PLAY:
+        monitor = core_monitor(game)
+    else:
+        controller = AI(game)
+
 
 if __name__ == "__main__":
     main()
