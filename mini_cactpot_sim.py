@@ -30,11 +30,13 @@ class core_game():
                 self.attempts -= 1
                 if not self.attempts:
                     self.state = 2
+                    print("GAME: State set to 2")
                 tile.open = True
                 self.preach()
                 return
         elif self.state == 2 and move in range(len(self.lines)):
             self.state = 3
+            print("GAME: State set to 3")
             for tile in self.tiles:
                 tile.open = True
             line = self.lines[move]
@@ -45,8 +47,10 @@ class core_game():
         return
     
     def reset(self) -> None:
+        print("GAME: Resetting...")
         # reset state
         self.state = 1
+        print("GAME: State set to 1")
         self.attempts = 3
         self.score = 0
         # make new solution
@@ -64,6 +68,7 @@ class core_game():
         return
     
     def preach(self): # brute force preach everything initially. implement selective preach at a later time maybe.
+        print("GAME: Preaching...")
         audience = self.listeners
         state_of_the_board = [tile.get_value() for tile in self.tiles]
         for dude in audience:
@@ -90,7 +95,7 @@ class core_tile():
         return
     
 ####################################################################################################
-# DISPLAY
+# DISPLAY COMPONENTS
 
 class custom_QPushButton(QPushButton):
     def resizeEvent(self, event):
@@ -125,6 +130,9 @@ class monitor_arrow(monitor_button):
     def __init__(self, symbol):
         super().__init__()
         self.button.setText(symbol)
+
+####################################################################################################
+# MONITOR
 
 class core_monitor():
 
@@ -205,11 +213,81 @@ class core_monitor():
         return
     
 ####################################################################################################
+# AI
+
+# what will the AI need?
+
+    # logic
+    # statial awareness
+    # eyes
+        # list of seen values
+    
+    # which tiles to reveal?
+        # 1 weigh every tile based on how many lines it participates in
+        # 2 cycle through lines, find all without any revealed tiles
+        # 3 cross reference, find tiles in multiple lists
+        # 4 randomly select tile among higest value in list
+        
+    # a means of evaluating the likely score of a line
+        # cycle through every line
+        # list all posibilities
+        # uh... average the scores? think more about this.
+        # list each score with it's likelyhood
+        # pick the line with the best score to odds ratio
+        
+    # PLAN:
+        # 1 MAKE RANDOM AI TO BUILD FRAMEWORK
+        # 2 MAKE AI WITH THIS LOGIC:
+            # 1: reveal tiles with simple method (Y shape ish)
+            # 2: evaluate lines and pick best guess
+
+class AI():
+    def __init__(self, game) -> None:
+        self.game = game
+        self.lines = game.lines
+        self.scoreboard = game.SCOREBOARD
+        print("AI: Connecting to game...")
+        game.register_listener(self)
+    
+    def listen(self, gamestate, boardstate, score):
+        self.board = boardstate
+        self.seen = [value for value in boardstate if value]
+        
+        if gamestate == 1:
+            print("AI: Received state 1.")
+            open_tiles = [key for key, value in enumerate(self.board) if value]
+            print(f"AI: {len(open_tiles)} tiles are open.")
+            candidates = [line for line in self.lines if not any(tile in open_tiles for tile in line)]
+            print(f"AI: identified {len(candidates)} candidates.")
+            
+            if not len(candidates):
+                best_guesses = [key for key, value in enumerate(self.board) if not value]
+            else:
+                rankings = {}
+                for candidate in candidates:
+                    for tile in candidate:
+                        if not tile in rankings:
+                            rankings[tile] = 1
+                        else:
+                            rankings[tile] += 1
+                
+                highest_rank = max(rankings.values())
+                best_guesses = [tile for tile, count in rankings.items() if count == highest_rank]
+                print(f"AI: Identified {best_guesses} as guesses out of {rankings}")
+                
+            guess = best_guesses[randrange(len(best_guesses))]
+            
+            print(f"AI: Playing {guess}")
+            self.game.play(guess)
+
+
+####################################################################################################
 # MAIN
 
 def main():
     game = core_game()
-    monitor = core_monitor(game)
+    controller = AI(game)
+    # monitor = core_monitor(game)
 
 if __name__ == "__main__":
     main()
