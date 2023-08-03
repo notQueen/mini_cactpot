@@ -18,7 +18,6 @@ class core_game():
         self.tiles = [core_tile(n) for n in range(9)]
         self.lines = self.LINES
         self.listeners = []
-        self.reset()
         return
     
     def play(self, move = -1, reset = False):
@@ -232,30 +231,52 @@ class core_monitor():
 
 class AI():
     def __init__(self, game) -> None:
+        game.register_listener(self)
         self.game = game
         self.lines = game.lines
         self.scoreboard = game.SCOREBOARD
-        # print("AI: Connecting to game...")
-        game.register_listener(self)
-        self.score = 0
-        scores = []
+        self.score, self.total, self.count = 0, 0, 0
         
-        #while not self.score == 10000:
-        games_to_play = 10000000
-        
-        for _ in range(games_to_play):
-            game.play(reset = True)
-            scores.append(self.score)
-        
-        average = sum(scores) / len(scores)
-        
-        print(f"Average score in {games_to_play}: {average}")
-    
     def listen(self, gamestate, boardstate, score):
         self.score = score
-        self.board = boardstate
+        self.boardstate = boardstate
+        self.gamestate = gamestate
+        
+    def simulate(self, iterations = 0):
+        """Runs a given number of simulations, or untill jackpot if no value is given."""
+        if not iterations:
+            while not self.score == 10000:
+                self.game.play(reset = True)
+                self.count += 1
+                self.total += self.score
+        else:
+            for _ in range(iterations):
+                self.game.play(reset = True)
+                self.count += 1
+                self.total += self.score
+        
+        average = self.total / self.count
+        
+        print(f"Games played: {self.count}\nAverage score: {average:.{1}f}")
+
+class AI_SIMPLE(AI):
+    def __init__(self, game) -> None:
+        super().__init__(game)
+        base_tile_value = {}
+        for tile in self.lines:
+            for ref in tile:
+                if not ref in base_tile_value:
+                    base_tile_value[ref] = 1
+                else:
+                    base_tile_value[ref] += 1
+        self.base_tile_value = base_tile_value
+        
+        self.simulate()
+    
+    def listen(self, gamestate, boardstate, score):
+        super().listen(gamestate, boardstate, score)
         # seen_tiles = [value for value in boardstate if value] # i think this can be deleted
-        open_tiles = [key for key, value in enumerate(self.board) if value]
+        open_tiles = [key for key, value in enumerate(boardstate) if value]
         
         if gamestate == 1:
             # print("AI: Received state 1 (TILES)")
@@ -265,7 +286,7 @@ class AI():
             
             if not len(candidate_lines):
                 # print("AI: No outstanding guesses. Choosing randomly ...")
-                best_tile_guesses = [key for key, value in enumerate(self.board) if not value]
+                best_tile_guesses = [key for key, value in enumerate(boardstate) if not value]
             else:
                 rankings = {}
                 for candidate in candidate_lines:
@@ -298,33 +319,50 @@ class AI():
             
             if guess == -1:
                 guess = randrange(len(self.lines))
-            # else:
-                # print("Potential Jackpot identified")
         
         elif gamestate == 3:
-            # print("AI: Received state 3. (SCORE)")
-            guess = -1
-            # print("AI: Game finished.")
-            # print(f"AI: Score: {score}")
-        else:
-            guess = -1 # this shouldn't happen
+            return score
         
-        if not guess == -1:
-            # print(f"AI: Playing {guess}")
-            self.game.play(guess)
+        self.game.play(guess)
+        
+class AI_RANDOM(AI):
+    def __init__(self, game) -> None:
+        super().__init__(game)
+        
+        self.simulate(1000000)
+    
+    def listen(self, gamestate, boardstate, score):
+        super().listen(gamestate, boardstate, score)
+        
+        if gamestate == 1:
+            valid_moves = [key for key, tile in enumerate(boardstate) if not tile]
+            move = valid_moves[randrange(len(valid_moves))]
+        elif gamestate == 2:
+            move = randrange(len(self.lines))
+        elif gamestate == 3:
+            self.score = score
+            return
+        
+        self.game.play(move)
 
 ####################################################################################################
 # MAIN
 
 def main():
     
-    I_WANT_TO_PLAY = False
+    # Human:     0
+    # AI_SIMPLE: 1
+    # AI_RANDOM: 2
+    
+    PLAYER = 2
     
     game = core_game()
-    if I_WANT_TO_PLAY:
-        monitor = core_monitor(game)
-    else:
-        controller = AI(game)
+    if PLAYER == 0:
+        controller = core_monitor(game)
+    elif PLAYER == 1:
+        controller = AI_SIMPLE(game)
+    elif PLAYER == 2:
+        controller = AI_RANDOM(game)
 
 
 if __name__ == "__main__":
