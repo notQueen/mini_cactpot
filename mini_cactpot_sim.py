@@ -257,7 +257,7 @@ class AI():
         
         average = self.total / self.count
         
-        print(f"Games played: {self.count}\nAverage score: {average:.{1}f}")
+        return self.count, average
 
 class AI_SIMPLE(AI):
     def __init__(self, game) -> None:
@@ -270,8 +270,6 @@ class AI_SIMPLE(AI):
                 else:
                     base_tile_value[ref] += 1
         self.base_tile_value = base_tile_value
-        
-        self.simulate()
     
     def listen(self, gamestate, boardstate, score):
         super().listen(gamestate, boardstate, score)
@@ -328,8 +326,6 @@ class AI_SIMPLE(AI):
 class AI_RANDOM(AI):
     def __init__(self, game) -> None:
         super().__init__(game)
-        
-        self.simulate(1000000)
     
     def listen(self, gamestate, boardstate, score):
         super().listen(gamestate, boardstate, score)
@@ -350,20 +346,31 @@ class AI_RANDOM(AI):
 
 def main():
     
-    # Human:     0
-    # AI_SIMPLE: 1
-    # AI_RANDOM: 2
+    # Experiment mode: 0
+    # Human:           1
+    # AI_SIMPLE:       2
+    # AI_RANDOM:       3
     
     PLAYER = 0
     
-    game = core_game()
-    if PLAYER == 0:
-        controller = core_monitor(game)
-    elif PLAYER == 1:
-        controller = AI_SIMPLE(game)
+    if PLAYER == 1:
+        controller = core_monitor(core_game())
     elif PLAYER == 2:
-        controller = AI_RANDOM(game)
-
+        controller = AI_SIMPLE(core_game())
+    elif PLAYER == 3:
+        controller = AI_RANDOM(core_game())
+    
+    iterations = 100000
+    
+    simpleAI = AI_SIMPLE(core_game())
+    randomAI = AI_RANDOM(core_game())
+    
+    count, average = simpleAI.simulate(iterations)
+    print(f"AI_SIMPLE simulated {count} games and got an average score of {average}")
+    count, average = randomAI.simulate(iterations)
+    print(f"AI_RANDOM simulated {count} games and got an average score of {average}")
+    
+    return
 
 if __name__ == "__main__":
     main()
