@@ -354,7 +354,7 @@ def main():
     # AI_SIMPLE: 1
     # AI_RANDOM: 2
     
-    PLAYER = 2
+    PLAYER = 0
     
     game = core_game()
     if PLAYER == 0:
