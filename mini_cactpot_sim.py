@@ -1,3 +1,4 @@
+from itertools import combinations as itertools_combinations
 from random import randrange
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
@@ -259,6 +260,52 @@ class AI():
         
         return self.count, average
 
+class AI_EVALUATOR(AI):
+    def listen(self, gamestate, boardstate, score):
+        self.boardstate = boardstate
+        self.seen_numbers = [tile for tile in boardstate if tile]
+        self.unseen_numbers = [number for number in range(1, 10) if not number in self.seen_numbers]
+        
+        if gamestate == 3:
+            self.score = score
+            return
+        
+        if gamestate == 2:
+            move = self.find_best_line()
+        
+        if gamestate == 1:
+            move = self.find_best_tile()
+        
+        self.game.play(move)
+    
+    def find_best_tile(self):
+        valid_moves = [key for key, tile in enumerate(self.boardstate) if not tile]
+        return valid_moves[randrange(len(valid_moves))]
+    
+    def find_best_line(self):
+        options = {line_ref: self.evaluate_line(line) for line_ref, line in enumerate(self.lines)}
+        
+        highest_evaluation = max(options.values())
+        candidates = [key for key, value in options.items() if value == highest_evaluation]
+        
+        best_line = candidates[randrange(len(candidates))] # pick random if multiple
+        return best_line
+    
+    def evaluate_line(self, line_ref):
+        numbers_in_line = [self.boardstate[ref] for ref in line_ref if self.boardstate[ref]]
+        
+        combinations = list(itertools_combinations(self.unseen_numbers, 3 - len(numbers_in_line)))
+        potential_lines = []
+        for combination in combinations:
+            potential_lines.append(numbers_in_line + list(combination))
+        
+        total = 0
+        for potential_line in potential_lines:
+            total += (self.scoreboard[sum(potential_line)])
+        
+        average_score = total / len(potential_line) 
+        return average_score
+    
 class AI_SIMPLE(AI):
     def __init__(self, game) -> None:
         super().__init__(game)
@@ -364,11 +411,14 @@ def main():
     
     simpleAI = AI_SIMPLE(core_game())
     randomAI = AI_RANDOM(core_game())
+    evaluatorAI = AI_EVALUATOR(core_game())
     
     count, average = simpleAI.simulate(iterations)
     print(f"AI_SIMPLE simulated {count} games and got an average score of {average}")
     count, average = randomAI.simulate(iterations)
     print(f"AI_RANDOM simulated {count} games and got an average score of {average}")
+    count, average = evaluatorAI.simulate(iterations)
+    print(f"AI_EVALUATOR simulated {count} games and got an average score of {average}")
     
     return
 
